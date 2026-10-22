@@ -369,6 +369,8 @@
         <p class="eyebrow">Mission complete</p>
         <h1 id="result-heading" tabindex="-1">Your cosmic score</h1>
         <p class="result-score" id="final-score"></p>
+        <p class="result-message" id="personal-best"></p>
+        <p class="footer-note" id="storage-status" role="status" hidden></p>
         <p class="result-message" id="result-message"></p>
         <div class="actions">
           <button class="primary-button" id="restart-button" type="button">
@@ -447,12 +449,26 @@
     const nextButton = document.getElementById("next-button");
     const restartButton = document.getElementById("restart-button");
     const finalScore = document.getElementById("final-score");
+    const personalBestDisplay = document.getElementById("personal-best");
+    const storageStatus = document.getElementById("storage-status");
     const resultEmoji = document.getElementById("result-emoji");
     const resultMessage = document.getElementById("result-message");
 
     let currentQuestion = 0;
     let score = 0;
     let answered = false;
+    let personalBest = 0;
+    let storageAvailable = true;
+
+    try {
+      const savedBest = localStorage.getItem("cosmicQuizPersonalBest");
+      const parsedBest = Number(savedBest);
+      if (savedBest !== null && Number.isInteger(parsedBest) && parsedBest >= 0 && parsedBest <= questions.length) {
+        personalBest = parsedBest;
+      }
+    } catch {
+      storageAvailable = false;
+    }
 
     function renderQuestion() {
       const item = questions[currentQuestion];
@@ -523,6 +539,21 @@
       quizScreen.hidden = true;
       resultScreen.hidden = false;
       finalScore.textContent = `${score} / ${questions.length}`;
+
+      if (score > personalBest) {
+        personalBest = score;
+        try {
+          localStorage.setItem("cosmicQuizPersonalBest", String(personalBest));
+        } catch {
+          storageAvailable = false;
+        }
+      }
+
+      personalBestDisplay.textContent = `Personal best: ${personalBest} / ${questions.length}`;
+      storageStatus.hidden = storageAvailable;
+      storageStatus.textContent = storageAvailable
+        ? ""
+        : "Browser storage is unavailable; your personal best is kept for this visit only.";
 
       if (score === questions.length) {
         resultEmoji.textContent = "🚀";
